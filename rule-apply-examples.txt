@@ -1,0 +1,1111 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+1. no-eval
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Dynamic Function Execution Based on User Input
+function runUserFunction() {
+    var userFunction = document.getElementById("function-name").value; // User supplied function name
+    eval(userFunction + "()"); // Executing the user-supplied function name
+}
+
+// An attacker could potentially supply a malicious function name that executes unwanted code.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Calculating Expressions from User Input
+function calculateResult() {
+    var userExpression = document.getElementById("calc-input").value; // User supplied mathematical expression
+    var result = eval(userExpression); // Calculating the expression directly
+    console.log("The result is: " + result);
+}
+
+// An attacker could enter a string that is code, not a mathematical expression, leading to code execution.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Setting Object Properties with eval()
+function setObjectProperty(obj, propName, propValue) {
+    eval("obj." + propName + " = '" + propValue + "'");
+}
+
+// If either propName or propValue is user-controlled without proper sanitization,
+// it could result in arbitrary code execution or property injection.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: JSON Parsing with eval()
+function parseJSON(jsonString) {
+    var data = eval("(" + jsonString + ")");
+    return data;
+}
+
+// Using eval to parse JSON is unsafe if jsonString is controlled by the user.
+// It should be replaced with JSON.parse().
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Executing Code from Local Storage
+function executeLocalStorageCode() {
+    var code = localStorage.getItem('userCode'); // Code stored in local storage
+    eval(code); // Executing the code from local storage
+}
+
+// This is dangerous if the code in local storage can be tampered with or set by an attacker.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Using eval() in Event Handlers
+window.onload = function() {
+    var userClickHandler = localStorage.getItem('onClickHandler');
+    document.getElementById('myButton').setAttribute('onclick', 'eval(' + userClickHandler + ')');
+};
+
+// Attaching an event handler using eval like this can lead to XSS if the handler code is not sanitized.
+-----------------------------------------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+2. no-implied-eval
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: setTimeout with String Argument
+function delayedAlert(message, delay) {
+    // Using a string as the first argument to setTimeout can lead to implied eval
+    setTimeout("alert('" + message + "')", delay);
+}
+
+// This can be exploited if message is controlled by the user and includes closing quotes and other commands.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: setInterval with String Argument
+function calculateResult() {
+    var userExpression = document.getElementById("calc-input").value; // User supplied mathematical expression
+    var result = eval(userExpression); // Calculating the expression directly
+    console.log("The result is: " + result);
+}
+
+// An attacker could enter a string that is code, not a mathematical expression, leading to code execution.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Function Constructor with User Input
+var userInput = "console.log('User input');"; // Could be user input from URL or form
+// Using the Function constructor with strings can act like an eval.
+var func = new Function(userInput);
+
+// Executing the function could be harmful if userInput includes malicious code.
+func();
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Using setTimeout with Template Literals
+function updateUserInterface(elementId, value) {
+    // Template literals with a string argument in setTimeout can be as risky as eval if value is not sanitized
+    setTimeout(`document.getElementById('${elementId}').innerText = '${value}'`, 1000);
+}
+
+// This is dangerous as it can execute arbitrary code if value includes JavaScript code snippets.
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Dynamic Script Loading with setInterval
+function loadScriptEveryMinute(scriptUrl) {
+    // Dynamically loading a script using setInterval with string argument
+    setInterval("loadScript('" + scriptUrl + "')", 60000);
+}
+
+// This is risky especially if the scriptUrl is from an untrusted source.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Using setInterval for Polling with Dynamic Code Execution
+var dynamicFunctionName = "checkUpdates"; // Potentially from user input or configuration
+// Polling with dynamic function names can lead to security issues
+setInterval(dynamicFunctionName + "()", 3000);
+
+// If the dynamicFunctionName is manipulated, it could lead to arbitrary code execution.
+-----------------------------------------------------------------------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+3. insecure-innerHTML
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Inserting Form Input Directly
+document.getElementById("submit-button").addEventListener("click", function() {
+    var userInput = document.getElementById("user-input").value;
+    // Inserting user input directly into the DOM
+    document.getElementById("output").innerHTML = userInput;
+});
+
+// If userInput contains malicious script tags or JavaScript, it could be executed.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Displaying Search Results
+function displaySearchResults(results) {
+    // Assuming 'results' is an array of HTML strings from a backend search API
+    results.forEach(function(result) {
+        var div = document.createElement('div');
+        // Setting innerHTML directly from external sources without sanitization
+        div.innerHTML = result;
+        document.getElementById("search-results").appendChild(div);
+    });
+}
+
+// If the backend is compromised or the content isn't sanitized, this could lead to XSS.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Updating User Profile with Dynamic HTML
+function updateUserProfile(profileData) {
+    // profileData contains HTML content with user details
+    document.getElementById("profile").innerHTML = profileData.bio;
+    // Other profile updates...
+}
+
+// If profileData.bio is user-controlled and includes script tags, it could be used for XSS.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Real-time Chat Application
+socket.on('chat message', function(msg) {
+    var messageElement = document.createElement('div');
+    // Directly inserting message content into the DOM
+    messageElement.innerHTML = msg;
+    document.getElementById('messages').appendChild(messageElement);
+});
+
+// If 'msg' includes malicious JavaScript, it would be executed when the message is displayed.
+-----------------------------------------------------------------------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+4. disable-tls-verification-nodejs
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: HTTPS Request Without Validation
+const https = require('https');
+const options = {
+  hostname: 'example.com',
+  port: 443,
+  path: '/data',
+  method: 'GET',
+  rejectUnauthorized: false // Disables SSL certificate validation
+};
+
+const req = https.request(options, (res) => {
+  // Processing the response
+});
+
+req.end();
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Global Agent Settings
+const https = require('https');
+
+// Disable SSL certificate validation for all requests
+https.globalAgent.options.rejectUnauthorized = false;
+
+// Any subsequent https request will now be insecure
+https.get('https://example.com', (res) => {
+  // Processing the response
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Using axios with Unsafe Configuration
+const axios = require('axios');
+
+// Making an HTTP request with axios and disabling SSL certificate check
+axios.get('https://example.com/api/data', {
+  httpsAgent: new https.Agent({  
+    rejectUnauthorized: false // This allows connections to unauthorized servers
+  })
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Environment Variable to Disable SSL Verification
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Setting the environment variable to disable SSL validation
+
+const request = require('request');
+
+request.get('https://example.com', (error, response, body) => {
+  // Response handling
+});
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Custom Agent in superagent Without SSL Verification
+const superagent = require('superagent');
+const https = require('https');
+
+const agent = new https.Agent({
+  rejectUnauthorized: false // Security risk: SSL certificate problems will be ignored
+});
+
+superagent
+  .get('https://example.com')
+  .agent(agent)
+  .end((err, res) => {
+    // Response handling
+  });
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: WebSocket Connection Ignoring SSL
+const WebSocket = require('ws');
+
+const ws = new WebSocket('wss://example.com', {
+  rejectUnauthorized: false // Indicates the client should not check for a valid SSL certificate
+});
+
+ws.on('open', function open() {
+  ws.send('Hello, server!');
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+5. sensitive-info-logging
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Logging Database Connection Strings
+const dbConnect = (dbConfig) => {
+  console.log(`Connecting to database with user: ${dbConfig.user} and password: ${dbConfig.password}`);
+  // Code to initiate database connection
+};
+
+// If dbConfig contains sensitive information, such as user credentials, this log is a security risk.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Error Handling that Exposes Sensitive Data
+try {
+  // Some sensitive operation
+} catch (error) {
+  console.error(`Error during sensitive operation: ${error}`);
+}
+
+// If the error object contains sensitive details, such as stack traces or user information, logging it is unsafe.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Logging Payment Details
+app.post('/process-payment', (req, res) => {
+  const paymentDetails = req.body;
+  console.log(`Processing payment for card number: ${paymentDetails.cardNumber}`);
+  
+  // Process the payment...
+  
+  // Logging full payment details, especially card number, is a severe security risk.
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Verbose Logging of User Authentication
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  console.log(`User login attempt: username: ${username}, password: ${password}`);
+  
+  // Authentication logic...
+  
+  // Passwords should never be logged, as they are sensitive data.
+});
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Logging API Keys
+const fs = require('fs');
+
+fs.readFile('/path/to/config.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(`Loaded configuration: ${data}`);
+  
+  // If the configuration
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Printing Configuration Files Containing Secrets
+const fs = require('fs');
+
+fs.readFile('/path/to/config.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(`Loaded configuration: ${data}`);
+  
+  // If the configuration
+-----------------------------------------------------------------------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+6. avoid-document-write
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Dynamically Writing Scripts with User Input
+function loadUserScript(username) {
+    var scriptUrl = "/user-scripts/" + username + ".js";
+    document.write('<script src="' + scriptUrl + '"></script>');
+    // This can be dangerous if the username variable is not properly sanitized,
+    // as it could lead to an XSS vulnerability.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Writing Content Based on URL Parameters
+function writeAdvertisement() {
+    var adId = new URLSearchParams(window.location.search).get('ad');
+    document.write('<script src="http://ads.example.com/ad?ID=' + adId + '"></script>');
+    // Including external scripts based on URL parameters without proper validation can be insecure.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Injecting HTML into the Document
+function displayUserProfile(userId) {
+    var profileHtml = getUserProfileHtml(userId); // Assume this function returns HTML from the server
+    document.write(profileHtml);
+    // Writing raw HTML into the document can be unsafe if the HTML is not properly sanitized.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Overwriting Document with External Content
+function loadExternalContent(url) {
+    fetch(url).then(response => response.text()).then(data => {
+        document.write(data);
+        // Overwriting the entire document with fetched content can be insecure,
+        // especially if the content comes from an untrusted source.
+    });
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+7. insecure-websocket
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Establishing a WebSocket Connection without Encryption
+const ws = new WebSocket("ws://example.com/data");
+
+ws.onmessage = function(event) {
+  console.log(`Data received: ${event.data}`);
+  // Data received through an unsecured WebSocket connection could be intercepted.
+};
+
+// The ws:// URL scheme is used, which means the WebSocket connection is not encrypted.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Fallback to Insecure WebSocket
+function connectWebSocket(secure) {
+  const protocol = secure ? "wss://" : "ws://";
+  const ws = new WebSocket(protocol + "example.com/data");
+
+  ws.onmessage = function(event) {
+    // Handle the data
+  };
+
+  // The connection may fallback to an insecure ws:// connection.
+}
+
+// This code attempts to allow for both secure and insecure WebSocket connections,
+// which could be dangerous if 'secure' is false.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: WebSocket Connection in a Node.js Server
+const WebSocket = require('ws');
+const server = require('http').createServer();
+
+const wss = new WebSocket.Server({ server: server, path: "/ws" });
+
+wss.on('connection', function connection(ws) {
+  ws.on('message', function incoming(message) {
+    console.log('received: %s', message);
+  });
+});
+
+server.listen(8080);
+// The WebSocket server does not implement TLS/SSL, exposing all data to potential eavesdropping.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Client-side WebSocket Retry Logic
+let ws;
+function setupWebSocket() {
+  ws = new WebSocket('ws://example.com/data');
+
+  ws.onclose = function() {
+    // Attempt to reconnect with an insecure WebSocket after a connection loss
+    setTimeout(setupWebSocket, 1000);
+  };
+}
+
+// This retry logic can repeatedly expose the user to insecure WebSocket connections.
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Insecure WebSocket in a Chat Application
+document.getElementById('send').onclick = function() {
+  const ws = new WebSocket('ws://chat.example.com');
+  ws.onopen = function() {
+    ws.send(document.getElementById('message').value);
+  };
+
+  ws.onmessage = function(event) {
+    const chat = document.getElementById('chat');
+    chat.innerHTML += `<div>${event.data}</div>`;
+  };
+};
+
+// A chat application using ws:// could allow an attacker to intercept or manipulate messages.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+8. express-insecure-direct-object-reference
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: User Profile Access without Proper Authorization Checks
+const express = require('express');
+const app = express();
+
+app.get('/profile/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const userProfile = getUserProfile(userId); // Assume this fetches user profile data
+  res.json(userProfile);
+  // Any user can access any other user's profile data just by changing the userId in the URL.
+});
+
+function getUserProfile(userId) {
+  // Database call to retrieve user profile data
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: File Download with User-Supplied Filename
+app.get('/download/:filename', (req, res) => {
+  const filename = req.params.filename;
+  res.download(`/uploads/${filename}`);
+  // Users can download any file from the server if they know or guess the filename.
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Order Details Accessible by Order ID
+app.get('/order/:orderId', (req, res) => {
+  const orderId = req.params.orderId;
+  const orderDetails = getOrderDetails(orderId); // Fetches order details
+  res.json(orderDetails);
+  // An attacker could access order details of other users by changing the orderId parameter.
+});
+
+function getOrderDetails(orderId) {
+  // Database call to get order details
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Updating User Data without Verification
+app.post('/updateUser/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const userData = req.body;
+  updateUser(userId, userData); // Updates user data without checking if the requester is allowed to do so
+  res.send('User updated successfully');
+});
+
+function updateUser(userId, userData) {
+  // Database call to update user data
+}
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Accessing Logs by Log ID
+app.get('/logs/:logId', (req, res) => {
+  const logId = req.params.logId;
+  const logData = getLogData(logId); // Assume this fetches log data
+  res.json(logData);
+  // If log IDs are predictable, an attacker could potentially access sensitive log data.
+});
+
+function getLogData(logId) {
+  // Function to retrieve log data
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+9. overly-permissive-cors
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Global CORS Configuration Allowing All Origins
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors({
+  origin: '*' // Allows any origin to access your API
+}));
+
+app.get('/api/data', (req, res) => {
+  res.json({ secretData: 'Sensitive information' });
+});
+
+// This configuration allows any website to make requests to your API and access its data.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Specific Route with Permissive CORS
+app.get('/public-api', cors({
+  origin: '*' // Overly permissive CORS for a specific route
+}), (req, res) => {
+  res.json({ data: 'This data is accessible from any origin' });
+});
+
+// Even if the rest of your application has secure CORS settings, this specific route is exposed.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Dynamic CORS Origin Based on User Input
+app.use(cors({
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
+
+// If the whitelist is not properly managed or validated, it could lead to exposing endpoints to untrusted origins.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Verbose Logging of User Authentication
+app.use(cors({
+  origin: '*', // Allowing any origin
+  credentials: true // Allowing credentials to be included in cross-origin requests
+}));
+
+// This setting is risky as it
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+10. sensitive-info-logging
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Logging User Credentials
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  console.log(`Login attempt: username = ${username}, password = ${password}`);
+  // Authenticate user...
+  // Logging credentials is a severe security risk, as it exposes user passwords in plain text.
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Error Handling Exposing Sensitive Data
+try {
+  // Some operation involving sensitive data
+} catch (error) {
+  console.error(`Error during operation: ${error}`);
+  // This can inadvertently log sensitive information contained in the error object.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Logging Database Queries with User Data
+function getUserData(userId) {
+  const query = `SELECT * FROM users WHERE id = ${userId}`;
+  console.log(`Executing query: ${query}`);
+  // Execute query...
+  // Logging SQL queries might reveal sensitive user data or database structure.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Verbose Logging in Payment Processing
+app.post('/process-payment', (req, res) => {
+  const paymentDetails = req.body;
+  console.log(`Processing payment: ${JSON.stringify(paymentDetails)}`);
+  // Process payment...
+  // Detailed logging of payment details can expose sensitive financial information.
+});
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Logging API Keys or Secrets
+const apiKey = getApiKey();
+console.log(`Using API key: ${apiKey}`);
+// Make API call...
+// Logging API keys or other secrets compromises their confidentiality.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Logging Contents of Configuration Files
+const config = loadConfigFile();
+console.log(`Loaded configuration: ${JSON.stringify(config)}`);
+// Use configuration...
+// If the configuration file contains sensitive data like database passwords or API keys, this is insecure.
+-----------------------------------------------------------------------------------------------------------
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+11.use-of-deprecated-or-vulnerable-functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Using the eval() Function
+function executeDynamicCode(code) {
+  eval(code);
+  // The eval() function is often considered harmful as it allows for execution of arbitrary code,
+  // which can lead to security vulnerabilities like XSS or code injection.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Utilizing Old Hashing Algorithms (e.g., MD5, SHA1)
+const crypto = require('crypto');
+
+function generateHash(data) {
+  return crypto.createHash('md5').update(data).digest('hex');
+  // MD5 is a deprecated hashing algorithm due to its vulnerabilities and should not be used for cryptographic purposes.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Using Deprecated Node.js APIs (e.g., url.parse)
+const url = require('url');
+
+function parseUrl(inputUrl) {
+  return url.parse(inputUrl);
+  // In Node.js, url.parse() is deprecated in favor of the WHATWG URL API.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Insecure Random Number Generation
+function generateToken() {
+  return Math.random().toString(36).substring(2, 15);
+  // Math.random() is not cryptographically secure. Use crypto.randomBytes instead for secure random value generation.
+}
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Deprecated Database Connection Methods
+const mysql = require('mysql');
+
+const db = mysql.createConnection({
+  // Connection configuration
+});
+
+db.connect();
+// In some database libraries, certain connection methods might be deprecated in favor of newer, more secure methods.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Using Outdated Libraries or Frameworks
+const http = require('http');
+
+http.createClient(80, 'www.example.com');
+// http.createClient is deprecated. Use http.request or a higher-level library like axios or fetch.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+12.direct-set-document-domain
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Relaxing the Same-Origin Policy for Cross-Origin Frames
+document.domain = "example.com";
+// This allows a page at subdomain.example.com to access resources at another.subdomain.example.com
+// However, it can be dangerous as it broadens the scope of domains that can interact with each other.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Communication Between a Main Page and Iframe
+// In the main page (www.example.com)
+document.domain = "example.com";
+
+// In the iframe (sub.example.com)
+document.domain = "example.com";
+
+// This allows for communication between the main page and the iframe across subdomains,
+// but it weakens the security model by relaxing the same-origin policy.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Cross-Origin AJAX Requests
+document.domain = "example.com";
+$.ajax({
+    url: "http://api.example.com/data",
+    // Cross-origin AJAX request
+    // The change in document.domain can lead to unintended exposure to or from other subdomains.
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Script from a Subdomain Accessing Main Domain
+// In a script running on sub.example.com
+document.domain = "example.com";
+// Now this script can access DOM elements on example.com, which can be risky.
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Sharing Cookies Across Subdomains
+document.domain = "example.com";
+// This allows scripts from various subdomains of example.com to share cookies.
+// It can be a security risk if not handled properly, as it can expose cookies to a wider range of domains.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Manipulating DOM of a Cross-origin Parent Frame
+// In an embedded frame or popup
+document.domain = "example.com";
+// Access and manipulate the DOM of the parent frame
+// This can be exploited in a scenario where the parent frame did not intend to allow such access.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+13.use-obsolete-crypto
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+Scenario 1: Using MD5 for Password Hashing
+const crypto = require('crypto');
+
+function hashPassword(password) {
+  return crypto.createHash('md5').update(password).digest('hex');
+  // MD5 is considered obsolete and insecure for password hashing due to its vulnerability to collision attacks.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Encrypting Data with DES
+const crypto = require('crypto');
+
+function encryptDataDES(data, key) {
+  const cipher = crypto.createCipher('des-ede3-cbc', key);
+  let encrypted = cipher.update(data, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return encrypted;
+  // DES and 3DES are outdated and not recommended due to their short key lengths and vulnerability to brute-force attacks.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Using SHA1 for Digital Signatures
+const crypto = require('crypto');
+
+function signData(data, privateKey) {
+  const signer = crypto.createSign('sha1');
+  signer.update(data);
+  return signer.sign(privateKey, 'hex');
+  // SHA1 is no longer considered secure for digital signatures due to known vulnerabilities.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Using RC4 for Encryption
+const crypto = require('crypto');
+
+function encryptDataRC4(data, key) {
+  const cipher = crypto.createCipher('rc4', key);
+  let encrypted = cipher.update(data, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return encrypted;
+  // RC4 is considered insecure and should not be used in modern applications.
+}
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: SSL/TLS Connections with Old Protocols
+const https = require('https');
+const options = {
+  //...
+  secureProtocol: 'SSLv3_method'
+  // SSLv3 is obsolete and insecure due to multiple vulnerabilities, including POODLE.
+};
+
+https.createServer(options, (req, res) => {
+  res.writeHead(200);
+  res.end('hello world\n');
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: Generating Random Numbers with Math.random for Security Purposes
+function generateToken() {
+  return Math.random().toString(36).substr(2);
+  // Math.random() is not cryptographically secure and should not be used for security-critical purposes.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+14.synchronous-xmlhttprequest
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Loading Data Synchronously in Page Load
+window.onload = function() {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.example.com/data', false); // Synchronous request
+  xhr.send();
+
+  if (xhr.status === 200) {
+    console.log(xhr.responseText);
+  }
+  // This can cause the browser to freeze or become unresponsive until the data is fully loaded.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Synchronous Request in Event Handlers
+document.getElementById('load-button').addEventListener('click', function() {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.example.com/data', false); // Synchronous request
+  xhr.send();
+
+  // This will block the UI until the request completes, leading to a poor user experience.
+});
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Fetching Configuration Synchronously
+function getConfig() {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.example.com/config', false); // Synchronous request
+  xhr.send();
+
+  return xhr.responseText;
+  // Fetching configuration data synchronously can delay the initialization of the application.
+}
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: Synchronous Request in a Loop
+for (let id of userIds) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', `https://api.example.com/user/${id}`, false); // Synchronous request
+  xhr.send();
+  // Synchronous requests inside a loop can lead to significant performance issues.
+}
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Synchronous AJAX in Form Submission
+document.getElementById('myForm').onsubmit = function() {
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.example.com/submit', false); // Synchronous request
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.send(new FormData(this));
+
+  // The browser will be unresponsive until the request completes.
+  return false;
+};
+-----------------------------------------------------------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+15.aws-keys-exposed
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 1: Hardcoding AWS Keys in the Application Code
+const AWS = require('aws-sdk');
+
+AWS.config.update({
+  accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+  secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+});
+
+// This exposes the AWS keys directly in the source code, which can be accessed by anyone who views the code.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 2: Including AWS Keys in Configuration Files Committed to Version Control
+// config.json
+{
+  "awsAccessKeyId": "AKIAIOSFODNN7EXAMPLE",
+  "awsSecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+}
+
+// Storing AWS credentials in configuration files that are committed to version control systems like Git exposes them to anyone with access to the repository.
+-----------------------------------------------------------------------------------------------------------
+
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 3: Embedding AWS Keys in Client-side JavaScript
+// In a client-side JavaScript file
+const awsAccessKeyId = 'AKIAIOSFODNN7EXAMPLE';
+const awsSecretAccessKey = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY';
+
+// Embedding AWS keys in client-side scripts makes them visible to anyone who inspects the webpage.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 4: AWS Keys in Environment Files (.env) Committed to Public Repositories
+# .env file
+AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+// Committing .env files with AWS credentials to public repositories can expose the keys to the public.
+-----------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 5: Logging AWS Keys in Debug Logs
+console.log(`AWS Access Key: ${process.env.AWS_ACCESS_KEY_ID}`);
+console.log(`AWS Secret Key: ${process.env.AWS_SECRET_ACCESS_KEY}`);
+
+// Logging AWS keys, even for debugging purposes, can lead to unintentional exposure, especially if logs are stored or monitored externally.
+-----------------------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------------------
+//Scenario 6: AWS Keys in Dockerfiles or Docker Compose Files
+# In a Dockerfile
+ENV AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+ENV AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+// Including AWS keys in Dockerfiles or Docker Compose files and then pushing them to public repositories exposes the keys.
+
+-----------------------------------------------------------------------------------------------------------
