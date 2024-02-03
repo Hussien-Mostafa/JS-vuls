@@ -143,19 +143,12 @@ function encryptDataDES(data, key) {
 
 //Scenario 2: Synchronous Request in Event Handlers
 document.getElementById('load-button').addEventListener('click', function() {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://api.example.com/data', false); // Synchronous request
-    xhr.send();
-  
+    const xhr = new XMLHttpRequest().open('https://api.example.com/data', false)// Synchronous request
+    xhr.send()
     // This will block the UI until the request completes, leading to a poor user experience.
   });
 
 
-  // config.json
-{
-    "awsAccessKeyId": "AKIAIOSFODNN7EXAMPLE",
-    "awsSecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-  }
   
   // Storing AWS credentials in configuration files that are committed to version control systems like Git exposes them to anyone with access to the repository.
 

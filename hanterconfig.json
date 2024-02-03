@@ -1,0 +1,7 @@
+{
+	"exculdeRules": [""],
+	"exculdeRulesDirs": [""],
+	"ignoredDirs": ["node_modules", "dist"],
+	"extensions": ["js"],
+	"ignoredPatterns":[]
+}

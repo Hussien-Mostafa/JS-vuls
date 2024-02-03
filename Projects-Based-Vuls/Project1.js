@@ -10,7 +10,7 @@ function runUserFunction() {
 
 function delayedAlert(message, delay) {
     // Using a string as the first argument to setTimeout can lead to implied eval
-    setTimeout("alert('" + message + "')", delay);
+    setTimeout("alert('error')", delay);
 }
 
 // This can be exploited if message is controlled by the user and includes closing quotes and other commands.
@@ -18,9 +18,9 @@ function delayedAlert(message, delay) {
 
 
 document.getElementById("submit-button").addEventListener("click", function() {
-    var userInput = document.getElementById("user-input").value;
+    var div = document.getElementById("user-input");
     // Inserting user input directly into the DOM
-    document.getElementById("output").innerHTML = userInput;
+    div.innerHTML = userInput;
 });
 
 // If userInput contains malicious script tags or JavaScript, it could be executed.
@@ -75,7 +75,7 @@ ws.onmessage = function(event) {
 
 
 const express = require('express');
-const app = express();
+app = express();
 
 app.get('/profile/:userId', (req, res) => {
   const userId = req.params.userId;

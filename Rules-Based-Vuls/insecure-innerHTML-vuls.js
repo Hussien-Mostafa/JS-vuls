@@ -1,9 +1,9 @@
 
 //Scenario 1: Inserting Form Input Directly
 document.getElementById("submit-button").addEventListener("click", function() {
-    var userInput = document.getElementById("user-input").value;
+    var element = document.getElementById("user-input").value;
     // Inserting user input directly into the DOM
-    document.getElementById("output").innerHTML = userInput;
+    element.innerHTML = userInput;
 });
 
 // If userInput contains malicious script tags or JavaScript, it could be executed.
